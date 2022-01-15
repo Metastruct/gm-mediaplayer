@@ -58,7 +58,11 @@ if SERVER then
 		ent:SetCreator(ply)
 		local mp = ent:GetMediaPlayer()
 		if mp then
-			mp:SetOwner(ply)
+			if mp.SetOwner then
+				mp:SetOwner(ply)
+			else
+				ErrorNoHalt("[MediaPlayer] ",ply," ",ent," Tried to SetOwner on "..tostring(mp).." but no .SetOwner\n")
+			end
 		end
 	end )
 

@@ -13,7 +13,7 @@ MediaPlayer.Cvars.AllowWebpages = CreateConVar( "mediaplayer_allow_webpages", 0,
 	FCVAR_SERVER_CAN_EXECUTE
 }, "Allows any webpage to be requested." )
 
-MediaPlayer.Cvars.QueueLimit = CreateConVar( "mediaplayer_queue_limit", 64, {
+MediaPlayer.Cvars.QueueLimit = CreateConVar( "mediaplayer_queue_limit", 32, {
 	FCVAR_REPLICATED,
 	FCVAR_SERVER_CAN_EXECUTE
 }, "Maximum size of a media player queue." )
@@ -21,7 +21,7 @@ MediaPlayer.Cvars.QueueLimit = CreateConVar( "mediaplayer_queue_limit", 64, {
 if CLIENT then
 
 	MediaPlayer.Cvars.Resolution	 = CreateClientConVar( "mediaplayer_resolution", 480, true, false )
-	MediaPlayer.Cvars.Audio3D		 = CreateClientConVar( "mediaplayer_3daudio", 1, true, false )
+	MediaPlayer.Cvars.Audio3D		 = CreateClientConVar( "mediaplayer_audio_3d", "0", true, false )
 	MediaPlayer.Cvars.Volume		 = CreateClientConVar( "mediaplayer_volume", 0.15, true, false )
 	MediaPlayer.Cvars.MuteUnfocused	 = 			GetConVar( "snd_mute_losefocus" )
 	MediaPlayer.Cvars.MuteUnfocusedX = CreateClientConVar( "mediaplayer_mute_unfocused", 1, true, false )

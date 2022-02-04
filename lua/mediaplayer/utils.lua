@@ -241,7 +241,7 @@ if CLIENT then
 	-- Attempts to play uri from stream or local file and returns channel in
 	-- callback.
 	--
-	function utils.LoadStreamChannel( uri, options, callback )
+	function utils.LoadStreamChannel(uri, options, callback)
 		local isLocalFile = false
 
 		-- Play uri from a local file if:
@@ -251,26 +251,159 @@ if CLIENT then
 		-- We can't check this using file.Exists since GMod only allows checking
 		-- within the GMod directory. However, sound.PlayFile will still load
 		-- a file from any directory.
-		if ( system.IsWindows() and uri:find("^%w:/") ) or
-			( not system.IsWindows() and uri:find("^/[^/]") ) then
+		if (system.IsWindows() and uri:find("^%w:/")) or (not system.IsWindows() and uri:find("^/[^/]")) then
 			isLocalFile = true
-
 			local success, decoded = pcall(urllib.unescape, uri)
+
 			if success then
 				uri = decoded
 			end
 		end
 
 		local playFunc = isLocalFile and sound.PlayFile or sound.PlayURL
-		playFunc( uri, options or "noplay", function( channel )
-			if IsValid( channel ) then
-				callback( channel )
+
+		playFunc(uri, options or "noplay", function(channel)
+			if IsValid(channel) then
+				local channel_ensured = utils.BassEnsurePlayback(channel)
+				assert(IsValid(channel_ensured))
+				callback(channel_ensured)
 			else
-				callback( nil )
+				callback(nil)
 			end
-		end )
+		end)
 	end
 
+	local DEBUG = false
+
+	local channels = utils.GetEnsuredPlayers and utils.GetEnsuredPlayers() or setmetatable({}, {
+		__mode = 'k'
+	})
+
+	function utils.GetEnsuredPlayers()
+		return channels
+	end
+
+	if DEBUG then
+		table.Empty(utils.GetEnsuredPlayers())
+	end
+
+	local WRAPPERS = {}
+
+	local MT = {
+		__tostring = function(self) return "EnsureWrapped: " .. tostring(self.__channel__) end
+	}
+
+	local IGModAudioChannel = FindMetaTable"IGModAudioChannel"
+
+	function MT:__index(k)
+		local f = WRAPPERS[k]
+		if f ~= nil then return f end
+
+		local function wrapper(me, ...)
+			return IGModAudioChannel[k](me.__channel__, ...)
+		end
+
+		WRAPPERS[k] = wrapper
+
+		return wrapper
+	end
+
+	function WRAPPERS:Play(...)
+		local channel = self.__channel__
+		channels[channel] = true
+
+		return IGModAudioChannel.Play(channel, ...)
+	end
+
+	function WRAPPERS:Stop(...)
+		local channel = self.__channel__
+		channels[channel] = nil
+
+		return IGModAudioChannel.Stop(channel, ...)
+	end
+
+	function WRAPPERS:Pause(...)
+		local channel = self.__channel__
+		channels[channel] = nil
+
+		return IGModAudioChannel.Pause(channel, ...)
+	end
+
+	--MediaPlayer.Cvars.EnsurePlayback	 
+	local EnsurePlayback = CreateClientConVar("mediaplayer_force_playback", '1', true, false)
+
+	local function process()
+		if not EnsurePlayback:GetBool() then return end
+
+		if not next(channels) then
+			timer.Exists"MP_BassEnsurePlayback"
+		end
+
+		for channel, inited in pairs(channels) do
+			if channel:IsValid() then
+				local stopped = channel:GetState() == GMOD_CHANNEL_STOPPED
+
+				if DEBUG then
+					print(channel, "inited=", inited, "stopped=", stopped)
+				end
+
+				if not inited and not stopped then
+					channels[channel] = true
+				elseif inited and stopped then
+					channel:Play()
+					print("Forcing playback for", channel)
+				end
+			else
+				channels[channel] = nil
+			end
+		end
+	end
+
+	concommand.Add("stopsound_mediplayer_bass", function()
+		for channel, inited in pairs(channels) do
+			if channel:IsValid() then
+				channels[channel] = nil
+				channel:Stop()
+				print("Stopped", channel)
+			else
+				channels[channel] = nil
+			end
+		end
+	end)
+
+	function utils.BassEnsurePlayback(channel, remove)
+		if remove == true then
+			channels[channel] = nil
+
+			return
+		end
+
+		channels[channel] = false
+
+		if DEBUG or not timer.Exists"MP_BassEnsurePlayback" then
+			timer.Create("MP_BassEnsurePlayback", DEBUG and 3.123 or 0.351, 0, process)
+		end
+
+		local wrapped = setmetatable({
+			__channel__ = channel,
+			channel = channel,
+			__wrappers = WRAPPERS
+		}, MT)
+
+		if DEBUG then
+			print("Wrapping to ensure playback", channel, "->", wrapped)
+		end
+
+		return wrapped
+	end
+
+	if DEBUG then
+		sound.PlayURL("https://www.happyhardcore.com/livestreams/p/u9/", "noplay", function(a, ...)
+			local asd = MediaPlayerUtils.BassEnsurePlayback(a)
+			print(asd == nil, asd)
+			_G.asd = asd
+		end)
+	end
 end
 
 _G.MediaPlayerUtils = utils

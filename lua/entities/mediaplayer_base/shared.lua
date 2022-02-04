@@ -45,7 +45,14 @@ end
 function ENT:OnRemove()
 	local mp = self:GetMediaPlayer()
 	if mp then
-		mp:Remove()
+		if SERVER then 
+			mp:Remove()
+		else
+			timer.Simple(5,function()
+				if self:IsValid() then return end
+				mp:Remove()
+			end)
+		end
 	end
 end
 

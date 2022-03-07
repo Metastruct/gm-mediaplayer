@@ -12,7 +12,7 @@ MediaPlayer.SetConfig({
 		-- Base URL where HTML content is located.
 		-- @type String
 		--
-		base_url = "http://samuelmaddock.github.io/gm-mediaplayer/"
+		base_url = "http://metastruct.github.io/gm-mediaplayer/"
 
 	},
 
@@ -25,7 +25,7 @@ MediaPlayer.SetConfig({
 		-- URL of the request menu.
 		-- @type String
 		--
-		url = "http://3kv.in/~earu/mediaplayer/"
+		url = "http://metastruct.github.io/gm-mediaplayer/request.html"
 
 	}
 

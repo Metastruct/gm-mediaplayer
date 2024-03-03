@@ -22,101 +22,87 @@
     <div id="player"></div>
 
     <script>
-    function getQueryParams(qs) {
-        qs = qs.split('+').join(' ');
+        const url = new URL(location.href)
 
-        var params = {},
-            tokens,
-            re = /[?&]?([^=]+)=([^&]*)/g;
+        const MEDIAPLAYER_SUBTITLES = url.searchParams.has('subtitles') ? url.searchParams.get('subtitles') : 'en'
+        const MEDIAPLAYER_VIDEO_ID = url.searchParams.get('v')
+        const MEDIAPLAYER_IS_TIMED = url.searchParams.get('timed') === 1
+        const MEDIAPLAYER_START_SEC = parseInt(url.searchParams.get('start'), 10)
 
-        while (tokens = re.exec(qs)) {
-            params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
+        const script = document.createElement('script');
+        script.src = "https://www.youtube.com/iframe_api";
+        
+        const firstScriptTag = document.getElementsByTagName('script')[0]
+        firstScriptTag.parentNode.insertBefore(script, firstScriptTag)
+
+        function onYouTubeIframeAPIReady() {
+            const player = new YT.Player('player', {
+                playerVars: {
+                    controls: 0,
+                    cc_load_policy: 1,
+                    cc_lang_pref: MEDIAPLAYER_SUBTITLES
+                        .split(',')
+                        .map(v => v.trim().toLowerCase())
+                        .shift(),
+                    disablekb: 1,
+                    modestbranding: 1,
+                    rel: 0,
+                    showinfo: 0
+                },
+                events: {
+                    'onReady': onPlayerReady
+                }
+            })
+            MediaPlayer.player = player
         }
 
-        return params;
-    }
+        function onPlayerReady() {
+            MediaPlayer.ytReady = true
+            MediaPlayer.player.loadVideoById(MEDIAPLAYER_VIDEO_ID, MEDIAPLAYER_START_SEC)
+            MediaPlayer.player.playVideo()
+        }
 
-    var query = getQueryParams(document.location.search);
-
-    var MEDIAPLAYER_VIDEO_ID = query.v || '5fSH8shWo_U',
-        MEDIAPLAYER_IS_TIMED = (query.timed === '0') ? false : true,
-        MEDIAPLAYER_START_SEC = query.start ? parseInt(query.start, 10) : undefined;
-
-    var tag = document.createElement('script');
-
-    tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-    function onYouTubeIframeAPIReady() {
-        var player = new YT.Player('player', {
-            videoId: MEDIAPLAYER_VIDEO_ID,
-            startSeconds: MEDIAPLAYER_START_SEC,
-            playerVars: {
-                autoplay: 1,
-                controls: 0,
-                cc_load_policy: 1,
-                disablekb: 1,
-                modestbranding: 1,
-                rel: 0,
-                showinfo: 0
+        window.MediaPlayer = window.MediaPlayer || {
+            isPlayerReady: function () {
+                return (typeof this.player === 'object') &&
+                    (typeof this.player.getPlayerState === 'function')
             },
-            events: {
-                'onReady': onPlayerReady
+            setVolume: function (volume) {
+                if (this.isPlayerReady()) {
+                    this.player.setVolume(volume)
+                }
+            },
+            play: function () {
+                if (this.isPlayerReady()) {
+                    this.player.playVideo()
+                }
+            },
+            pause: function () {
+                if (this.isPlayerReady()) {
+                    this.player.pauseVideo()
+                }
+            },
+            seek: function (seekTime) {
+                if (!this.isPlayerReady()) return
+                if (!MEDIAPLAYER_IS_TIMED) return
+
+                const state = this.player.getPlayerState()
+                if (state == YT.PlayerState.PAUSED) {
+                    this.player.playVideo()
+                }
+
+                if (state === YT.PlayerState.BUFFERING) return
+
+                const duration = this.player.getDuration()
+                if (seekTime > duration) return
+
+                const curTime = this.player.getCurrentTime()
+                const diffTime = Math.abs(curTime - seekTime)
+                if (diffTime < 5) return
+
+                this.player.seekTo(seekTime, true)
             }
-        });
-        MediaPlayer.player = player;
-    }
-
-    function onPlayerReady() {
-        MediaPlayer.ytReady = true;
-    }
-
-    window.MediaPlayer = window.MediaPlayer || {
-        isPlayerReady: function () {
-            return (typeof this.player === 'object') &&
-                (typeof this.player.getPlayerState === 'function');
-        },
-
-        setVolume: function ( volume ) {
-            if (!this.isPlayerReady()) return;
-            this.player.setVolume(volume);
-        },
-
-        play: function () {
-            if (!this.isPlayerReady()) return;
-            this.player.playVideo();
-        },
-
-        pause: function () {
-            if (!this.isPlayerReady()) return;
-            this.player.pauseVideo();
-        },
-
-        seek: function ( seekTime ) {
-            if (!this.isPlayerReady()) return;
-            if (!MEDIAPLAYER_IS_TIMED) return;
-
-            var state, curTime, duration, diffTime;
-
-            state = this.player.getPlayerState();
-
-            if (state == YT.PlayerState.PAUSED) {
-                this.player.playVideo();
-            }
-
-            if (state === YT.PlayerState.BUFFERING) return;
-
-            duration = this.player.getDuration();
-            if (seekTime > duration) return;
-
-            curTime = this.player.getCurrentTime();
-            diffTime = Math.abs(curTime - seekTime);
-            if (diffTime < 5) return;
-
-            this.player.seekTo(seekTime, true);
         }
-    };
     </script>
 </body>
 </html>

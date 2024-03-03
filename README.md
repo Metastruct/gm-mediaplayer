@@ -1,14 +1,23 @@
-Media Player
-============
-
-![Preview](http://images.akamai.steamusercontent.com/ugc/403430334757512796/4EFCE2D358BCAF42389E36B62CB11E9849842E07/)
-
+Modified Media Player
+---
 Media Player is an addon for Garry's Mod which features several media streaming services able to be played synchronously in multiplayer.
 
-### Installation ###
+Different from the original repository, various features have been added or fixed.
 
-Place the contents of this GitHub repository into a new addon folder within your `garrysmod/addons/` directory. For those unfamiliar with Git, press the `Download ZIP` button in the right-hand sidebar.
+You can check the [original repository here](https://github.com/toriato/glua-mediaplayer).
 
-If you'd only like to use the addon and not modify the source code, you can subscribe to the item on Steam Workshop:
+## Added or Modified Features
+- Allows YouTube Shorts URLs
+- Select preferred language for YouTube subtitles
+- Support for Invidious to play YouTube videos (for bypassing age restrictions, etc...)
 
-[![Steam Workshop](http://www.pixeltailgames.com/elevator/images/workshop_button.png)](http://steamcommunity.com/sharedfiles/filedetails/?id=546392647)
+## Added client-side ConVars
+- `mediaplayer_subtitles` (string)  
+  Specify your preferred subtitles using a [two-letter ISO country code](https://www.iban.com/country-codes).  
+  **Default**: *Language selected in the game (`gmod_language`)*
+- `mediaplayer_invidious_instance` (string)  
+  Specify your preferred instance to use when using Invidious.  
+  **Default**: *""* (default values are specified in the web app as *[vid.puffyan.us](https://vid.puffyan.us)*)
+- `mediaplayer_invidious_enable` (boolean)  
+  Use Invidious instead of the YouTube iFrame when playing YouTube videos.  
+  **Default**: *0*

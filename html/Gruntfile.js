@@ -3,7 +3,8 @@
 
 module.exports = function (grunt) {
 
-    const sass = require('node-sass')
+    const sass = require('sass')
+    const serveStatic = require('serve-static')
 
     // Load grunt tasks automatically
     require('load-grunt-tasks')(grunt);
@@ -72,9 +73,9 @@ module.exports = function (grunt) {
                 options: {
                     middleware: function(connect) {
                         return [
-                            connect.static('.tmp'),
-                            connect().use('/bower_components', connect.static('./bower_components')),
-                            connect.static(config.app)
+                            serveStatic('.tmp'),
+                            connect().use('/bower_components', serveStatic('./bower_components')),
+                            serveStatic(config.app)
                         ];
                     }
                 }

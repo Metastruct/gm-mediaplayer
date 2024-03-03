@@ -6,9 +6,9 @@ local htmlBaseUrl = MediaPlayer.GetConfigValue('html.base_url')
 
 DEFINE_BASECLASS( "mp_service_browser" )
 
--- https://developers.google.com/youtube/player_parameters
--- TODO: add closed caption option according to cvar
-SERVICE.VideoUrlFormat = htmlBaseUrl .. "youtube.html"
+local cvSubtitles = CreateClientConVar("mediaplayer_subtitles", GetConVar("gmod_language"):GetString(), true, false)
+local cvInvidiousInstance = CreateClientConVar("mediaplayer_invidious_instance", "", true, false)
+local cvInvidiousEnable = CreateClientConVar("mediaplayer_invidious_enable", 0, true, false)
 
 local JS_SetVolume = "if(window.MediaPlayer) MediaPlayer.setVolume(%s);"
 local JS_Seek = "if(window.MediaPlayer) MediaPlayer.seek(%s);"
@@ -47,16 +47,22 @@ function SERVICE:OnBrowserReady( browser )
 		return
 	end
 
-	local videoId = self:GetYouTubeVideoId()
-	local timedParam = self:IsTimed() and '1' or '0'
-	local url = self.VideoUrlFormat .. '?v=' .. videoId ..
-				'&timed=' .. timedParam
+	local url_prefix = htmlBaseUrl .. "youtube.html"
+	if cvInvidiousEnable:GetBool() then
+		url_prefix = htmlBaseUrl .. "invidious.html"
+	end
 
-	local curTime = self:CurrentTime()
+	local url = url_prefix .. 
+				'?v=' .. self:GetYouTubeVideoId() ..
+				'&timed=' .. (self:IsTimed() and '1' or '0') ..
+				'&instance=' .. cvInvidiousInstance:GetString() ..
+				'&subtitles=' .. cvSubtitles:GetString() ..
+				'&volume=' .. self:Volume()
 
 	-- Add start time to URL if the video didn't just begin
-	if self:IsTimed() and curTime > 3 then
-		url = url .. "&start=" .. math.Round(curTime)
+	local currentTime = self:CurrentTime()
+	if self:IsTimed() and currentTime > 3 then
+		url = url .. "&start=" .. math.Round(currentTime)
 	end
 
 	browser:OpenURL(url)

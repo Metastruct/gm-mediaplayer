@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+    html, body {
+        width: 100%;
+        height: 100%;
+    }
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: black;
+        overflow: hidden;
+    }
+    #player {
+        width: 100%;
+        height: 100%;
+    }
+    </style>
+</head>
+<body>
+    <div id="player"></div>
+
+    <script>
+        const url = new URL(location.href)
+
+        const MEDIAPLAYER_SUBTITLES = url.searchParams.has('subtitles') ? url.searchParams.get('subtitles') : 'en'
+        const MEDIAPLAYER_VIDEO_ID = url.searchParams.get('v')
+        const MEDIAPLAYER_IS_TIMED = url.searchParams.get('timed') === 1
+        const MEDIAPLAYER_START_SEC = parseInt(url.searchParams.get('start'), 10)
+
+        const script = document.createElement('script');
+        script.src = "https://www.youtube.com/iframe_api";
+        
+        const firstScriptTag = document.getElementsByTagName('script')[0]
+        firstScriptTag.parentNode.insertBefore(script, firstScriptTag)
+
+        function onYouTubeIframeAPIReady() {
+            const player = new YT.Player('player', {
+                playerVars: {
+                    controls: 0,
+                    cc_load_policy: 1,
+                    cc_lang_pref: MEDIAPLAYER_SUBTITLES
+                        .split(',')
+                        .map(v => v.trim().toLowerCase())
+                        .shift(),
+                    disablekb: 1,
+                    modestbranding: 1,
+                    rel: 0,
+                    showinfo: 0
+                },
+                events: {
+                    'onReady': onPlayerReady
+                }
+            })
+            MediaPlayer.player = player
+        }
+
+        function onPlayerReady() {
+            MediaPlayer.ytReady = true
+            MediaPlayer.player.loadVideoById(MEDIAPLAYER_VIDEO_ID, MEDIAPLAYER_START_SEC)
+            MediaPlayer.player.playVideo()
+        }
+
+        window.MediaPlayer = window.MediaPlayer || {
+            isPlayerReady: function () {
+                return (typeof this.player === 'object') &&
+                    (typeof this.player.getPlayerState === 'function')
+            },
+            setVolume: function (volume) {
+                if (this.isPlayerReady()) {
+                    this.player.setVolume(volume)
+                }
+            },
+            play: function () {
+                if (this.isPlayerReady()) {
+                    this.player.playVideo()
+                }
+            },
+            pause: function () {
+                if (this.isPlayerReady()) {
+                    this.player.pauseVideo()
+                }
+            },
+            seek: function (seekTime) {
+                if (!this.isPlayerReady()) return
+                if (!MEDIAPLAYER_IS_TIMED) return
+
+                const state = this.player.getPlayerState()
+                if (state == YT.PlayerState.PAUSED) {
+                    this.player.playVideo()
+                }
+
+                if (state === YT.PlayerState.BUFFERING) return
+
+                const duration = this.player.getDuration()
+                if (seekTime > duration) return
+
+                const curTime = this.player.getCurrentTime()
+                const diffTime = Math.abs(curTime - seekTime)
+                if (diffTime < 5) return
+
+                this.player.seekTo(seekTime, true)
+            }
+        }
+    </script>
+</body>
+</html>

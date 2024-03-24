@@ -12,7 +12,7 @@ MediaPlayer.SetConfig({
 		-- Base URL where HTML content is located.
 		-- @type String
 		--
-		base_url = "http://toriato.github.io/glua-mediaplayer/"
+		base_url = "https://metastruct.github.io/gm-mediaplayer/"
 
 	},
 
@@ -25,7 +25,7 @@ MediaPlayer.SetConfig({
 		-- URL of the request menu.
 		-- @type String
 		--
-		url = "http://toriato.github.io/glua-mediaplayer/request.html"
+		url = "https://metastruct.github.io/gm-mediaplayer/request.html"
 
 	}
 

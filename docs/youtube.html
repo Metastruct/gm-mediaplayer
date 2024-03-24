@@ -1,8 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-    html, body {
+<!doctype html><style>html, body {
         width: 100%;
         height: 100%;
     }
@@ -15,14 +11,7 @@
     #player {
         width: 100%;
         height: 100%;
-    }
-    </style>
-</head>
-<body>
-    <div id="player"></div>
-
-    <script>
-        const url = new URL(location.href)
+    }</style><div id=player></div><script>const url = new URL(location.href)
 
         const MEDIAPLAYER_SUBTITLES = url.searchParams.has('subtitles') ? url.searchParams.get('subtitles') : 'en'
         const MEDIAPLAYER_VIDEO_ID = url.searchParams.get('v')
@@ -102,7 +91,4 @@
 
                 this.player.seekTo(seekTime, true)
             }
-        }
-    </script>
-</body>
-</html>
+        }</script>

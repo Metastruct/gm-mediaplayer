@@ -1,0 +1,57 @@
+<!doctype html><style>html, body {
+        width: 100%;
+        height: 100%;
+    }
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: black;
+        overflow: hidden;
+    }
+    iframe {
+        width: 100%;
+        height: 100%;
+    }</style><iframe></iframe><script>const url = new URL(location.href)
+
+        const MEDIAPLAYER_INVIDIOUS_INSTANCE = url.searchParams.get('instance') || 'vid.puffyan.us'
+        const MEDIAPLAYER_SUBTITLES = url.searchParams.get('subtitles') || 'en'
+        const MEDIAPLAYER_VIDEO_ID = url.searchParams.get('v') || 'TnlakHr-O4w'
+        const MEDIAPLAYER_VOLUME = parseInt(url.searchParams.get('volume'), 10) || 100
+        const MEDIAPLAYER_START_SEC = parseInt(url.searchParams.get('start'), 10) || 0
+
+        const iframe = document.querySelector('iframe')
+        const queries = new URLSearchParams({
+            autoplay: '1',
+            start: MEDIAPLAYER_START_SEC,
+            volume: MEDIAPLAYER_VOLUME / 100,
+            subtitles: MEDIAPLAYER_SUBTITLES
+                .split(',')
+                .map(v => v.trim().toLowerCase())
+                .join(',')
+        })
+
+        let player = null
+
+        // this shit not works, fuck CSF
+        window.MediaPlayer = window.MediaPlayer || {
+            isPlayerReady: () => player !== null,
+            setVolume: volume => player.volume(volume / 100),
+            play: () => player.play(),
+            pause: () => player.pause(),
+            seek: time => player.currentTime(time)
+        }
+
+        const instance_prefix = MEDIAPLAYER_INVIDIOUS_INSTANCE.startsWith('https://') ? MEDIAPLAYER_INVIDIOUS_INSTANCE : 'https://' + MEDIAPLAYER_INVIDIOUS_INSTANCE
+        iframe.src = `${instance_prefix}/embed/${MEDIAPLAYER_VIDEO_ID}?${queries.toString()}`
+        iframe.addEventListener('load', () => {
+            Object.defineProperty(iframe.contentWindow, 'player', {
+                get: function () {
+                    return this._player
+                },
+                set: function (value) {
+                    this._player = value
+                    player = value
+                    MediaPlayer.ytReady = true
+                }
+            })
+        })</script>

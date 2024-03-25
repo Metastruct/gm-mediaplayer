@@ -84,8 +84,7 @@
             },
             seek: function (seekTime) {
                 if (!this.isPlayerReady()) return;
-                if (MEDIAPLAYER_IS_TIMED) return; // cannot seek if started from a time slot, but why?
-
+                if (!MEDIAPLAYER_IS_TIMED) return; 
                 const state = this.player.getPlayerState()
                 if (state == YT.PlayerState.PAUSED) {
                     this.player.playVideo()

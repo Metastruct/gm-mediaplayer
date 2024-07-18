@@ -2,7 +2,7 @@
 SERVICE.Name = "HTML5 Video"
 SERVICE.Id = "h5v"
 SERVICE.Base = "res"
-SERVICE.FileExtensions = {'webm'} -- 'mp4',	-- not yet supported by Awesomium -- 'ogg'	-- already registered as audio, need a work-around :(
+SERVICE.FileExtensions = {'webm', 'mp4'} -- 'mp4',	-- not yet supported by Awesomium -- 'ogg'	-- already registered as audio, need a work-around :(
 local base = baseclass.Get"mp_service_base"
 local res = baseclass.Get"mp_service_res"
 
@@ -39,7 +39,7 @@ local JS_Seek = [[(function () {
 }());]]
 local JS_Play = [[(function () {
 	var elem = document.getElementById('player');
-	if (elem) {		
+	if (elem) {
 	elem.play();
 
 	}
@@ -94,7 +94,7 @@ if CLIENT then
 		res.Pause(self)
 
 		if ValidPanel(self.Browser) then
-			self.Browser:RunJavascript(JS_Pauser)
+			self.Browser:RunJavascript(JS_Pause)
 			self._YTPaused = true
 		end
 	end

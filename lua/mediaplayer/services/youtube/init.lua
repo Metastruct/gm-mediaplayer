@@ -80,15 +80,19 @@ function SERVICE:GetMetadata( callback )
 
 	else
 		local videoId = self:GetYouTubeVideoId()
-		local videoUrl = "https://www.youtube.com/watch?v="..videoId
+		local videoUrl = "https://invidious.fdn.fr/api/v1/videos/" .. videoId
 
 		self:Fetch( videoUrl,
 			-- On Success
 			function( body, length, headers, code )
-				local status, metadata = pcall(self.ParseYTMetaDataFromHTML, self, body)
+				local metadata, data = {}, util.JSONToTable(body)
+
+                metadata.title = data.title
+                metadata.thumbnail = data.videoThumbnails[1].url
+                metadata.duration = not data.liveNow and data.lengthSeconds or 0
 
 				-- html couldn't be parsed
-				if not status or not metadata.title or not isnumber(metadata.duration) then
+				if not metadata.title or not isnumber(metadata.duration) then
 					-- Title is nil or Duration is nan
 					if istable(metadata) then
 						metadata = "title = "..type(metadata.title)..", duration = "..type(metadata.duration)

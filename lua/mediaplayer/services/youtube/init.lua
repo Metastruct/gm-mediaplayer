@@ -4,6 +4,13 @@ include "shared.lua"
 local TableLookup = MediaPlayerUtils.TableLookup
 local htmlentities_decode = url.htmlentities_decode
 
+local invidious_instance = CreateConVar( "mediaplayer_invidious_instance_sv", "", {
+	FCVAR_ARCHIVE,
+	FCVAR_NOTIFY,
+	FCVAR_REPLICATED,
+	FCVAR_SERVER_CAN_EXECUTE
+}, "Serverside invidious instance, will be used clientside too" )
+
 ---
 -- Helper function for converting ISO 8601 time strings; this is the formatting
 -- used for duration specified in the YouTube v3 API.
@@ -80,45 +87,87 @@ function SERVICE:GetMetadata( callback )
 
 	else
 		local videoId = self:GetYouTubeVideoId()
-		local videoUrl = "https://invidious.fdn.fr/api/v1/videos/" .. videoId
 
-		self:Fetch( videoUrl,
-			-- On Success
-			function( body, length, headers, code )
-				local metadata, data = {}, util.JSONToTable(body)
+		local instance = invidious_instance:GetString()
+		-- Use invidious serverside
+		if instance:Trim() ~= "" then
+			local videoUrl = instance .. "/api/v1/videos/" .. videoId
 
-                metadata.title = data.title
-                metadata.thumbnail = data.videoThumbnails[1].url
-                metadata.duration = not data.liveNow and data.lengthSeconds or 0
+			self:Fetch( videoUrl,
+				-- On Success
+				function( body, length, headers, code )
+					local metadata, data = {}, util.JSONToTable(body)
 
-				-- html couldn't be parsed
-				if not metadata.title or not isnumber(metadata.duration) then
-					-- Title is nil or Duration is nan
-					if istable(metadata) then
-						metadata = "title = "..type(metadata.title)..", duration = "..type(metadata.duration)
+					metadata.title = data.title
+					metadata.thumbnail = data.videoThumbnails[1].url
+					metadata.duration = not data.liveNow and data.lengthSeconds or 0
+
+					-- html couldn't be parsed
+					if not metadata.title or not isnumber(metadata.duration) then
+						-- Title is nil or Duration is nan
+						if istable(metadata) then
+							metadata = "title = "..type(metadata.title)..", duration = "..type(metadata.duration)
+						end
+						-- Misc error
+						callback(false, "Failed to parse HTML Page for metadata: "..metadata)
+						return
 					end
-					-- Misc error
-					callback(false, "Failed to parse HTML Page for metadata: "..metadata)
-					return
-				end
 
-				self:SetMetadata(metadata, true)
+					self:SetMetadata(metadata, true)
 
-				if self:IsTimed() then
-					MediaPlayer.Metadata:Save(self)
-				end
+					if self:IsTimed() then
+						MediaPlayer.Metadata:Save(self)
+					end
 
-				callback(self._metadata)
-			end,
-			-- On failure
-			function( reason )
-				callback(false, "Failed to fetch YouTube HTTP metadata [reason="..tostring(reason).."]")
-			end,
-			-- Headers
-			{
-				["User-Agent"] = "Googlebot"
-			}
-		)
+					callback(self._metadata)
+				end,
+				-- On failure
+				function( reason )
+					callback(false, "Failed to fetch YouTube HTTP metadata [reason="..tostring(reason).."]")
+				end,
+				-- Headers
+				{
+					["User-Agent"] = "Googlebot"
+				}
+			)
+		-- Use YouTube serverside
+		else
+			local videoUrl = "https://www.youtube.com/watch?v="..videoId
+
+			self:Fetch( videoUrl,
+				-- On Success
+				function( body, length, headers, code )
+					local status, metadata = pcall(self.ParseYTMetaDataFromHTML, self, body)
+
+					-- html couldn't be parsed
+					if not status or not metadata.title or not isnumber(metadata.duration) then
+						-- Title is nil or Duration is nan
+						if istable(metadata) then
+							metadata = "title = "..type(metadata.title)..", duration = "..type(metadata.duration)
+						end
+						-- Misc error
+						callback(false, "Failed to parse HTML Page for metadata: "..metadata)
+						return
+					end
+
+					self:SetMetadata(metadata, true)
+
+					if self:IsTimed() then
+						MediaPlayer.Metadata:Save(self)
+					end
+
+					callback(self._metadata)
+				end,
+				-- On failure
+				function( reason )
+					callback(false, "Failed to fetch YouTube HTTP metadata [reason="..tostring(reason).."]")
+				end,
+				-- Headers
+				{
+					["User-Agent"] = "Googlebot"
+				}
+			)
+		end
 	end
 end
 

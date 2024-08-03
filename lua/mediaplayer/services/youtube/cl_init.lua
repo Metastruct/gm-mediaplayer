@@ -48,7 +48,7 @@ function SERVICE:OnBrowserReady( browser )
 	end
 
 	local url_prefix = htmlBaseUrl .. "youtube.html"
-	local invidious_cvar_sv = GetConVar("mediaplayer_invidious_instance_sv")
+	local invidious_cvar_sv = self.Cvars.InvidiousInstance
 	if cvInvidiousEnable:GetBool() then
 		url_prefix = htmlBaseUrl .. "invidious.html"
 	elseif invidious_cvar_sv:GetString():Trim() ~= "" then

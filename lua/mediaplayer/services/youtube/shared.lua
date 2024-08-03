@@ -4,6 +4,15 @@ SERVICE.Name 	= "YouTube"
 SERVICE.Id 		= "yt"
 SERVICE.Base 	= "browser"
 
+SERVICE.Cvars = SERVICE.Cvars or {}
+SERVICE.Cvars.InvidiousInstance = CreateConVar( "mediaplayer_invidious_instance_sv", "", {
+	FCVAR_ARCHIVE,
+	FCVAR_NOTIFY,
+	FCVAR_REPLICATED,
+	FCVAR_SERVER_CAN_EXECUTE
+}, "Serverside invidious instance, will be used clientside too" )
+
+
 local YtVideoIdPattern = "[%a%d-_]+"
 local UrlSchemes = {
 	"youtube%.com/watch%?v=" .. YtVideoIdPattern,

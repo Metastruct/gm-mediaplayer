@@ -4,13 +4,6 @@ include "shared.lua"
 local TableLookup = MediaPlayerUtils.TableLookup
 local htmlentities_decode = url.htmlentities_decode
 
-local invidious_instance = CreateConVar( "mediaplayer_invidious_instance_sv", "", {
-	FCVAR_ARCHIVE,
-	FCVAR_NOTIFY,
-	FCVAR_REPLICATED,
-	FCVAR_SERVER_CAN_EXECUTE
-}, "Serverside invidious instance, will be used clientside too" )
-
 ---
 -- Helper function for converting ISO 8601 time strings; this is the formatting
 -- used for duration specified in the YouTube v3 API.
@@ -88,7 +81,7 @@ function SERVICE:GetMetadata( callback )
 	else
 		local videoId = self:GetYouTubeVideoId()
 
-		local instance = invidious_instance:GetString()
+		local instance = self.Cvars.InvidiousInstance:GetString()
 		-- Use invidious serverside
 		if instance:Trim() ~= "" then
 			local videoUrl = instance .. "/api/v1/videos/" .. videoId

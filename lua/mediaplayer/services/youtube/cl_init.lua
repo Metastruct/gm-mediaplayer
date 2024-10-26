@@ -63,6 +63,10 @@ function SERVICE:OnBrowserReady( browser )
 				'&subtitles=' .. cvSubtitles:GetString() ..
 				'&volume=' .. self:Volume()
 
+	if not self._YTPaused then
+		url = url .. "&autoplay=1"
+	end
+
 	-- Add start time to URL if the video didn't just begin
 	local currentTime = self:CurrentTime()
 	if self:IsTimed() and currentTime > 3 then

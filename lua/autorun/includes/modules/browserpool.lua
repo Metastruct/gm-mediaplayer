@@ -35,7 +35,7 @@ browserpool.pending = pending
 -- Minimum number of active browsers to be pooled.
 -- @type Number
 --
-local numMin = 2
+local numMin = 0
 
 ---
 -- Maximum number of active browsers to be pooled.
@@ -44,7 +44,7 @@ local numMin = 2
 local numMax = 8
 
 function browserpool.setLimits(min,max)
-	numMin = 2
+	numMin = min
 	numMax = max
 end
 
@@ -52,19 +52,19 @@ end
 -- Number of currently active browsers.
 -- @type Number
 --
-local numActive = 0
+local numActive = table.Count(browserpool.active)
 
 ---
 -- Number of currently pending browser requests.
 -- @type Number
 --
-local numPending = 0
+local numPending = table.Count(browserpool.pending)
 
 ---
 -- Number of total browser requests.
 -- @type Number
 --
-local numRequests = 0
+local numRequests = table.Count(browserpool.pending)
 
 ---
 -- Default URL to set browsers on setup/teardown.
@@ -88,7 +88,7 @@ local function setupPanel( panel )
 
 	-- Create a new panel if it wasn't passed in
 	if panel then
-		panel:Stop()
+		panel:StopLoading()
 	else
 		panel = vgui.Create("DMediaPlayerHTML")
 	end
@@ -105,7 +105,7 @@ local function setupPanel( panel )
 	panel:SetPaintedManually(true)
 
 	-- Fix for panel not getting cleared after 3/2017 update
-	panel:SetHTML( "" )
+	panel:SetHTML( "<b>browserpool: should not see this</b>" )
 
 	-- Set default URL
 	panel:OpenURL( defaultUrl )
@@ -319,6 +319,9 @@ end)
 concommand.Add("browserpool_kill", function()
 	for k, v in next, browserpool.active do
 		browserpool.active[k] = nil
+		v:StopLoading()
+		v:SetHTML"<b>no</b>"
+		v:OpenURL(defaultUrl)
 		v:Remove()
 	end
 

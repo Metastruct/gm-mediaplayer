@@ -5,6 +5,21 @@ SERVICE.Id 		= "browser"
 SERVICE.Abstract = true
 
 if CLIENT then
+	local JS_SetVolume = [[(function() {
+		function setvol(elem) {
+			elem.volume=%s;
+		}
+		
+		var collection = document.getElementsByTagName("audio");
+		for (let i = 0; i < collection.length; i++) {
+		  setvol(collection[i]);		  
+		}
+		
+		collection = document.getElementsByTagName("video");
+		for (let i = 0; i < collection.length; i++) {
+		  setvol(collection[i]);
+		}
+	})();]]
 
 	function SERVICE:GetBrowser()
 		return self.Browser
@@ -30,6 +45,9 @@ if CLIENT then
 
 	function SERVICE:SetVolume( volume )
 		-- Implement this in a child service
+		local vol = (volume or MediaPlayer.Volume())
+		local js = (JS_SetVolume):format( vol )
+		self.Browser:RunJavascript(js)
 	end
 
 	function SERVICE:Volume( volume )

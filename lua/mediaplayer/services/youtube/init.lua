@@ -89,6 +89,15 @@ function SERVICE:GetMetadata( callback )
 			self:Fetch( videoUrl,
 				-- On Success
 				function( body, length, headers, code )
+					if code ~= 200 then
+						callback(false, "Fetch(invidious) failed http error "..tostring(code).."")
+
+						if MediaPlayer.DEBUG then
+							print(body)
+						end
+						return
+					end
+					
 					local metadata, data = {}, util.JSONToTable(body)
 
 					metadata.title = data.title
@@ -130,6 +139,15 @@ function SERVICE:GetMetadata( callback )
 			self:Fetch( videoUrl,
 				-- On Success
 				function( body, length, headers, code )
+					if code ~= 200 then
+						callback(false, "Fetch(youtube) failed http error "..tostring(code).."")
+
+						if MediaPlayer.DEBUG then
+							print(body)
+						end
+						return
+					end
+
 					local status, metadata = pcall(self.ParseYTMetaDataFromHTML, self, body)
 
 					-- html couldn't be parsed
@@ -154,6 +172,9 @@ function SERVICE:GetMetadata( callback )
 				-- On failure
 				function( reason )
 					callback(false, "Failed to fetch YouTube HTTP metadata [reason="..tostring(reason).."]")
+					if MediaPlayer.DEBUG then
+						print(reason)
+					end
 				end,
 				-- Headers
 				{

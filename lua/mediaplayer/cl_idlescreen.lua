@@ -83,6 +83,9 @@ local DefaultIdlescreen = [[
 		<h1>No media playing</h1>
 		<p>Hold %s while looking at the media player to reveal the queue menu.</p>
 
+		<div class="metastream">
+			YOUTUBE ADS HINT: Open gmod context menu to reveal your mouse cursor and click the skip button on screen to skip ads!
+		</div>
 	</div>
 </body>
 </html>

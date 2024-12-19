@@ -103,7 +103,8 @@ end
 
 
 function SERVICE:NetWriteRequest()
-	net.WriteTable(self.sv_req_metadata)
+	if not self.PrefetchMetadata then return end
+	net.WriteTable(self._metadata or {})
 end
 
 function SERVICE:PreRequest( _callback )

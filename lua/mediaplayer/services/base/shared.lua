@@ -275,6 +275,9 @@ function SERVICE:Fetch( url, onReceive, onFailure, headers )
 	-- Pass in extra headers
 	if headers then
 		local tbl = table.Copy( HttpHeaders )
+		if CLIENT then
+			tbl["User-Agent"] = nil
+		end
 		table.Merge( tbl, headers )
 		request.headers = tbl
 	else

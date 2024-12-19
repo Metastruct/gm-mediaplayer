@@ -141,14 +141,21 @@ end
 
 
 function SERVICE:NetReadRequest()
-
+	if MediaPlayer.DEBUG then
+		print("attempting prefetching metadata from client")
+	end
 	if not self.PrefetchMetadata then return end
 
 	local metadata = net.ReadTable()
+	if not metadata or not next(metadata) then return end
+	if MediaPlayer.DEBUG then
+		print("got metadata request")
+	end
+	
 	self:SetMetadata(metadata, true)
 
 	if self:IsTimed() then
 		MediaPlayer.Metadata:Save(self)
 	end
-	
+
 end

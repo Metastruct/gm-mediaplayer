@@ -100,3 +100,72 @@ end
 function SERVICE:IsInvidiousEmbed()
 	return self._InvidiousEmbed
 end
+
+
+function SERVICE:NetWriteRequest()
+	net.WriteTable(self.sv_req_metadata)
+end
+
+function SERVICE:PreRequest( _callback )
+	local callback = function(ok, err, ...)
+		if ok then
+			_callback()
+		else
+			_callback(err or "unknown error")
+		end
+	end
+
+	local videoId = self:GetYouTubeVideoId()
+	if not videoId then
+		callback(false, "no videoid")
+		return
+	end
+
+	local videoUrl = "https://www.youtube.com/watch?v="..videoId
+
+	self:Fetch( videoUrl,
+		-- On Success
+		function( body, length, headers, code )
+			if code ~= 200 then
+				callback(false, "Fetch(youtube) failed http error "..tostring(code).."")
+
+				if MediaPlayer.DEBUG then
+					print(body)
+				end
+				return
+			end
+
+			local status, metadata = pcall(self.ParseYTMetaDataFromHTML, self, body)
+
+			-- html couldn't be parsed
+			if not status or not metadata.title or not isnumber(metadata.duration) then
+				-- Title is nil or Duration is nan
+				if istable(metadata) then
+					metadata = "title = "..type(metadata.title)..", duration = "..type(metadata.duration)
+				end
+				-- Misc error
+				callback(false, "Failed to parse HTML Page for metadata: "..metadata)
+				return
+			end
+
+			self:SetMetadata(metadata, true)
+
+			if self:IsTimed() then
+				MediaPlayer.Metadata:Save(self)
+			end
+
+			callback(self._metadata)
+		end,
+		-- On failure
+		function( reason )
+			callback(false, "Failed to fetch YouTube HTTP metadata [reason="..tostring(reason).."]")
+			if MediaPlayer.DEBUG then
+				print(reason)
+			end
+		end,
+		-- Headers
+		{
+			["User-Agent"] = "Googlebot"
+		}
+	)
+end

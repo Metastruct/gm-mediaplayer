@@ -16,6 +16,10 @@ MediaPlayer.SetConfig({
 
 	},
 
+	google = {
+		["referrer"] = "http://mediaplayer.pixeltailgames.com/"
+	},
+
 	---
 	-- Request menu
 	--

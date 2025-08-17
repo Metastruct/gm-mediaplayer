@@ -104,6 +104,7 @@ function MEDIAPLAYER:DrawHTML( browser, w, h )
 	DrawHTMLPanel( browser, w, h )
 end
 
+local YOUTUBE_ADS_HACK = 2.5
 function MEDIAPLAYER:DrawMediaInfo( media, w, h )
 
 	-- TODO: Fadeout media info instead of just hiding
@@ -141,7 +142,7 @@ function MEDIAPLAYER:DrawMediaInfo( media, w, h )
 		-- Bar foreground (progress)
 		draw.RoundedBox( 0, 0, h - bh, w * percent, bh, BarFgColor )
 
-		local timeY = h - bh - TextPaddingY * 2
+		local timeY = h - bh * YOUTUBE_ADS_HACK - TextPaddingY * 2
 
 		-- Current time
 		local curTimeStr = FormatSeconds(math.Clamp(math.Round(curTime), 0, duration))
